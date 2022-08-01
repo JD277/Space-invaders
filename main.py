@@ -11,10 +11,38 @@ pygame.display.set_icon(icon)
 clock = pygame.time.Clock()
 running = True
 # Background
-# bg = pygame.image.load('Graphics')
+bg = pygame.image.load('Graphics/bg.png')
 # Game active
 game_active = True
 
+
+# Bullet Sprite
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.image.load('Graphics/bullet.png')
+        self.rect = self.image.get_rect(
+            center=(0, 0))
+        self.image = pygame.transform.rotozoom(self.image, 0, 0.5)
+        self.test = -7
+        self.rect.x = space_player.sprite.rect.x + 22
+        self.rect.y = space_player.sprite.rect.y
+
+    def movement(self):
+        global state_bullet
+        if state_bullet:
+            self.rect.y += self.test
+
+    def destroy(self):
+        if self.rect <= 0:
+            self.kill()
+
+    def update(self):
+        self.movement()
+
+
+bullet_sprite = pygame.sprite.Group()
+state_bullet = False
 
 # Player Sprite
 class SpacePlayer(pygame.sprite.Sprite):
@@ -42,16 +70,17 @@ space_player = pygame.sprite.GroupSingle()
 space_player.add(SpacePlayer())
 
 
+# Enemy Sprite
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, tipo):
         super().__init__()
 
         if tipo == 'alien':
+            self.image = pygame.image.load('Graphics/alien.png')
+            self.rect = self.image.get_rect(center=(random.randint(400, 950), random.randint(300, 500)))
+            self.image = pygame.transform.rotozoom(self.image, 0, 0.15)
             self.x_pos = 3
             self.y_pos = -40
-            self.image = pygame.image.load('Graphics/alien.png')
-            self.rect = self.image.get_rect(center=(random.randint(250, 950), random.randint(300, 500)))
-            self.image = pygame.transform.rotozoom(self.image, 0, 0.15)
 
     def movements(self):
         self.rect.x += self.x_pos
@@ -67,10 +96,9 @@ class Enemy(pygame.sprite.Sprite):
 
 
 enemy = pygame.sprite.Group()
-enemy.add(Enemy('alien'))
+# enemy.add(Enemy('alien'))
 enemy_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(enemy_timer, 1000)
-
 
 while running:
     for event in pygame.event.get():
@@ -78,14 +106,24 @@ while running:
         if event.type == pygame.QUIT:
             pygame.quit()
             exit()
-        # if event.type == enemy_timer:
-        # enemy.add(Enemy('alien'))
+
+        if event.type == enemy_timer:
+            enemy.add(Enemy('alien'))
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                bullet_sprite.add(Bullet())
+                state_bullet = True
+
     if game_active:
         screen.fill('#424b5b')
+        screen.blit(bg, (0, 0))
         space_player.draw(screen)
         space_player.update()
 
         enemy.draw(screen)
         enemy.update()
+
+        bullet_sprite.draw(screen)
+        bullet_sprite.update()
     pygame.display.update()
     clock.tick(60)
