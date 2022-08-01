@@ -1,7 +1,6 @@
 from sys import exit
 import random
 import pygame
-import math
 
 pygame.init()
 
@@ -107,8 +106,6 @@ pygame.time.set_timer(enemy_timer, 1000)
 def collision_of_bullet():
     if pygame.sprite.groupcollide(bullet_sprite, enemy, True, True):
         print('')
-
-
 
 
 while running:
