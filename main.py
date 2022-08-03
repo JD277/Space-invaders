@@ -1,7 +1,6 @@
 import math
-import random
 from sys import exit
-
+import random
 import pygame
 
 pygame.init()
@@ -17,9 +16,6 @@ bg = pygame.image.load('Graphics/bg.png').convert_alpha()
 # Game active
 game_active = True
 
-# Score
-score = 0
-
 
 # Bullet Sprite
 class Bullet(pygame.sprite.Sprite):
@@ -28,7 +24,7 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.image.load('Graphics/bullet.png').convert_alpha()
         self.rect = self.image.get_rect(
             center=(0, 0))
-        self.image = pygame.transform.rotozoom(self.image, 0, 0.6)
+        self.image = pygame.transform.rotozoom(self.image, 0, 0.5)
         self.test = -7
         self.rect.x = space_player.sprite.rect.x + 22
         self.rect.y = space_player.sprite.rect.y
@@ -39,12 +35,11 @@ class Bullet(pygame.sprite.Sprite):
             self.rect.y += self.test
 
     def destroy(self):
-        global state_bullet, score
+        global state_bullet
         if state_bullet:
             if self.rect.y <= 20:
-                state_bullet = False
-                self.rect.y = space_player.sprite.rect.y
                 self.kill()
+                state_bullet = False
 
     def update(self):
         self.movement()
@@ -82,43 +77,71 @@ space_player.add(SpacePlayer())
 
 
 # Enemy Sprite
-enemy_image = pygame.image.load('Graphics/alien.png').convert_alpha()
-enemy_rect = enemy_image.get_rect(center=(random.randint(400, 950), random.randint(300, 500)))
-enemy_image = pygame.transform.rotozoom(enemy_image, 0, 0.15)
-x_pos = 3
-y_pos = -40
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, tipo):
+        super().__init__()
+        if tipo == 'alien':
+            self.image = pygame.image.load('Graphics/alien.png').convert_alpha()
+            self.rect = self.image.get_rect(center=(random.randint(400, 950), random.randint(300, 500)))
+            self.image = pygame.transform.rotozoom(self.image, 0, 0.15)
+            self.x_pos = 3
+            self.y_pos = -40
+
+    def movements(self):
+        self.rect.x += self.x_pos
+        if self.rect.x >= 720:
+            self.x_pos = -3
+            self.rect.y -= self.y_pos
+        elif self.rect.x <= 0:
+            self.x_pos = 3
+            self.rect.y -= self.y_pos
+
+    def destroy(self):
+        global state_bullet
+        if state_bullet and enemy.sprites():
+            enemy_sprite = pygame.sprite.spritecollideany(bullet_sprite.sprite, enemy)
+            if enemy_sprite:
+                t1 = self.rect.x - 22
+                t2 = self.rect.y
+                t3 = bullet_sprite.sprite.rect.x
+                t4 = bullet_sprite.sprite.rect.y
+                distance = math.sqrt((math.pow(t1 - t3, 2)) + (math.pow(t2 - t4, 2)))
+                if distance <= 90:
+                    hola = space_player.sprite.rect.y
+                    bullet_sprite.sprite.rect.y = hola
+                    state_bullet = False
+                    bullet_sprite.sprite.kill()
+                    self.kill()
+
+    def update(self):
+        self.movements()
+        self.destroy()
 
 
-def movements():
-    global x_pos, y_pos
-    enemy_rect.x += x_pos
-    if enemy_rect.x >= 720:
-        x_pos = -3
-        enemy_rect.y -= y_pos
-    elif enemy_rect.x <= 0:
-        x_pos = 3
-        enemy_rect.y -= y_pos
-
-
+enemy = pygame.sprite.AbstractGroup()
+enemy.add(Enemy('alien'))
+# enemy.add(Enemy('alien'))
 enemy_timer = pygame.USEREVENT + 1
 pygame.time.set_timer(enemy_timer, 1000)
 
 
 def collision_of_bullet():
-    global score, state_bullet
-    if state_bullet:
-        t1 = bullet_sprite.sprite.rect.x
-        t2 = bullet_sprite.sprite.rect.y
-        t3 = enemy_rect.x
-        t4 = enemy_rect.y
-
-        distance = math.sqrt((math.pow(t3-t1, 2)) + (math.pow(t4-t2, 2)))
-        if distance <= 60:
-            enemy_rect.y = random.randint(50, 150)
-            enemy_rect.x = random.randint(100, 700)
-            state_bullet = False
-            bullet_sprite.sprite.kill()
-            score += 5
+    global state_bullet
+    if state_bullet and enemy.sprites():
+        enemy_sprite = pygame.sprite.spritecollideany(bullet_sprite.sprite, enemy)
+        if enemy_sprite:
+            t1 = enemy_sprite.rect.x - 22
+            t2 = enemy_sprite.rect.y
+            t3 = bullet_sprite.sprite.rect.x
+            t4 = bullet_sprite.sprite.rect.y
+            distance = math.sqrt((math.pow(t1-t3, 2)) + (math.pow(t2-t4, 2)))
+            print(distance)
+            if distance <= 90:
+                enemy.remove(enemy_sprite)
+                hola = space_player.sprite.rect.y
+                bullet_sprite.sprite.rect.y = hola
+                state_bullet = False
+                bullet_sprite.sprite.kill()
 
 
 while running:
@@ -128,7 +151,9 @@ while running:
             pygame.quit()
             exit()
 
-        # if event.type == enemy_timer:
+        if event.type == enemy_timer:
+            if len(enemy.sprites()) < 6:
+                enemy.add(Enemy('alien'))
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and state_bullet is False:
@@ -136,17 +161,16 @@ while running:
                 state_bullet = True
 
     if game_active:
-
+        #collision_of_bullet()
+        screen.fill('#424b5b')
         screen.blit(bg, (0, 0))
-        bullet_sprite.draw(screen)
-        bullet_sprite.update()
         space_player.draw(screen)
         space_player.update()
 
-        screen.blit(enemy_image, enemy_rect)
-        movements()
-
-        collision_of_bullet()
+        bullet_sprite.draw(screen)
+        bullet_sprite.update()
+        enemy.draw(screen)
+        enemy.update()
 
     pygame.display.update()
     clock.tick(60)
