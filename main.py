@@ -43,6 +43,7 @@ class Bullet(pygame.sprite.Sprite):
         if state_bullet:
             if self.rect.y <= 20:
                 state_bullet = False
+                self.rect.y = space_player.sprite.rect.y
                 self.kill()
 
     def update(self):
