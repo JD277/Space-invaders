@@ -146,6 +146,7 @@ class Enemy(pygame.sprite.Sprite):
                     self.kill()
                     score += 1
 
+
     def player_collision(self):
         global game_active
         if game_active:
@@ -181,8 +182,13 @@ pygame.time.set_timer(enemy_timer, 1000)
 
 # Sounds
 bg_sound = pygame.mixer.Sound('Sound/The_strokes.mp3')
-# bg_sound.set_volume(-0.3)
-# bg_sound.play()
+bg_sound.set_volume(0.2)
+bg_sound.play()
+
+# bullet_sound = pygame.mixer.Sound()
+# game_over_sound = pygame.mixer.Sound()
+# shot_sound = pygame.mixer.Sound()
+
 while running:
     # event
     for event in pygame.event.get():
@@ -205,7 +211,6 @@ while running:
                     obstacles = 24
                 elif score >= 60:
                     obstacles = 30
-
 
         if event.type == pygame.KEYDOWN:
             if game_active:
