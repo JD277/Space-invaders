@@ -33,18 +33,25 @@ space_invaders_rect = space_invaders.get_rect(center=(400, 100))
 
 Instruction = font2.render("Press 'space' to start the game", False, '#5ab8a2')
 Instruction_rect = Instruction.get_rect(center=(400, 500))
-game_over = font.render(f"Game over, your score was {score}", False, '#5ab8a2')
-game_over_rect = game_over.get_rect(center=(300, 500))
+
 
 space_img = pygame.image.load('Graphics/Icon.png')
 space_img = pygame.transform.rotozoom(space_img, 0, 0.6)
 space_img_rect = space_img.get_rect(center=(400, 300))
 
+
 def display_score():
     score_value2 = score
     score_text = font.render('Score:  ' + str(score_value2), False, '#ffffff')
     score_text_rect = score_text.get_rect(midtop=(100, 20))
-    screen.blit(score_text, score_text_rect)
+
+    if game_active:
+        screen.blit(score_text, score_text_rect)
+    else:
+        game_over = font2.render("Game over, your score was  " + str(score), False, '#e73626')
+        game_over_rect = game_over.get_rect(center=(400, 500))
+        screen.blit(game_over, game_over_rect)
+
     return score_value2
 
 
@@ -185,8 +192,20 @@ while running:
             exit()
 
         if event.type == enemy_timer:
-            if len(enemy.sprites()) < 6:
+            obstacles = 6
+            if len(enemy.sprites()) <= obstacles:
                 enemy.add(Enemy('alien'))
+                if score >= 5:
+                    obstacles = 9
+                elif score >= 12:
+                    obstacles = 15
+                elif score >= 20:
+                    obstacles = 20
+                elif score >= 30:
+                    obstacles = 24
+                elif score >= 60:
+                    obstacles = 30
+
 
         if event.type == pygame.KEYDOWN:
             if game_active:
@@ -213,16 +232,13 @@ while running:
         score = display_score()
 
     elif game_active is False:
-
         screen.fill('#41425b')
         screen.blit(space_invaders, space_invaders_rect)
         screen.blit(space_img, space_img_rect)
 
-
         if score <= 0:
             screen.blit(Instruction, Instruction_rect)
-        else:
-            screen.blit(game_over, game_over_rect)
+        else: score = display_score()
 
     pygame.display.update()
     clock.tick(60)
