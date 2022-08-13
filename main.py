@@ -220,6 +220,7 @@ while running:
             else:
                 if event.key == pygame.K_SPACE and game_active is False:
                     game_active = True
+                    score = 0
 
     # Game
     if game_active is True:
